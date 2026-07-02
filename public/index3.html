@@ -63,17 +63,12 @@
     border-radius:8px;padding:4px;
   }
   .lang-btn{
-    width:34px;height:24px;border-radius:5px;border:2px solid transparent;
-    background:none;cursor:pointer;padding:0;overflow:hidden;
+    width:34px;height:26px;border-radius:6px;border:2px solid transparent;
+    background:none;cursor:pointer;padding:0;font-size:15px;line-height:22px;
+    display:flex;align-items:center;justify-content:center;
   }
   .lang-btn.active{border-color:var(--blue);}
-  .lang-btn:hover{opacity:.85;}
-  .flag{width:100%;height:100%;position:relative;display:block;}
-  .flag-mx{background:linear-gradient(90deg,#006341 0 33.33%,#fff 33.33% 66.66%,#ce1126 66.66%);}
-  .flag-us{background:repeating-linear-gradient(to bottom,#b22234 0 7.6%,#fff 7.6% 15.2%);}
-  .flag-us::before{content:'';position:absolute;top:0;left:0;width:42%;height:53.8%;background:#3c3b6e;}
-  .flag-kr{background:#fff;}
-  .flag-kr::before{content:'';position:absolute;top:50%;left:50%;width:52%;height:52%;transform:translate(-50%,-50%);border-radius:50%;background:conic-gradient(from -45deg,#cd2e3a 0deg 180deg,#003478 180deg 360deg);}
+  .lang-btn:hover{background:rgba(255,255,255,.05);}
   main{
     max-width:900px;
     margin:0 auto;
@@ -238,9 +233,9 @@
   </div>
   <div class="header-right">
     <div class="lang-switch">
-      <button class="lang-btn active" data-lang="es" title="Español"><span class="flag flag-mx"></span></button>
-      <button class="lang-btn" data-lang="en" title="English"><span class="flag flag-us"></span></button>
-      <button class="lang-btn" data-lang="ko" title="한국어"><span class="flag flag-kr"></span></button>
+      <button class="lang-btn active" data-lang="es" title="Español">🇲🇽</button>
+      <button class="lang-btn" data-lang="en" title="English">🇺🇸</button>
+      <button class="lang-btn" data-lang="ko" title="한국어">🇰🇷</button>
     </div>
     <div id="clock"></div>
   </div>
@@ -294,8 +289,8 @@
 
     <div class="field">
       <label data-i18n="labelPartNo">🔧 Part No. / Assembly</label>
-      <select id="metaPartNo" disabled>
-        <option value="" data-i18n="optPartNoDisabled">— Primero selecciona un modelo —</option>
+      <select id="metaPartNo">
+        <option value="" data-i18n="optPartNo">— Seleccionar part no. —</option>
       </select>
     </div>
   </div>
@@ -342,7 +337,6 @@ const I18N = {
     labelFecha:'Fecha', labelResp:'Responsable',
     labelLinea:'Línea', labelModelo:'Modelo', labelPartNo:'Part No. / Assembly',
     optLinea:'— Seleccionar línea —', optModelo:'— Seleccionar modelo —', optPartNo:'— Seleccionar part no. —',
-    optPartNoDisabled:'— Primero selecciona un modelo —',
     phResp:'Nombre',
     t1:'Problema', t2:'Causa', t3:'Primera acción', t4:'Contramedida final',
     ph1:'Describe qué ocurrió, dónde y cuándo.',
@@ -367,7 +361,6 @@ const I18N = {
     labelFecha:'Date', labelResp:'Operator',
     labelLinea:'Line', labelModelo:'Model', labelPartNo:'Part No. / Assembly',
     optLinea:'— Select line —', optModelo:'— Select model —', optPartNo:'— Select part no. —',
-    optPartNoDisabled:'— Select a model first —',
     phResp:'Name',
     t1:'Problem', t2:'Cause', t3:'First action', t4:'Final countermeasure',
     ph1:'Describe what happened, where and when.',
@@ -392,7 +385,6 @@ const I18N = {
     labelFecha:'날짜', labelResp:'작업자',
     labelLinea:'라인', labelModelo:'모델', labelPartNo:'Part No. / Assembly',
     optLinea:'— 라인 선택 —', optModelo:'— 모델 선택 —', optPartNo:'— Part No. 선택 —',
-    optPartNoDisabled:'— 먼저 모델을 선택하세요 —',
     phResp:'이름',
     t1:'문제', t2:'원인', t3:'초동 조치', t4:'최종 대책',
     ph1:'무슨 일이, 어디서, 언제 발생했는지 설명하세요.',
@@ -554,18 +546,10 @@ function onModeloChange(){
   const partSel = document.getElementById('metaPartNo');
   partSel.innerHTML = '';
   const optDefault = document.createElement('option');
-  optDefault.value = '';
-  if(!modelo || !bomPorModelo[modelo]){
-    optDefault.dataset.i18n = 'optPartNoDisabled';
-    optDefault.textContent = I18N[currentLang].optPartNoDisabled;
-    partSel.appendChild(optDefault);
-    partSel.disabled = true;
-    return;
-  }
-  optDefault.dataset.i18n = 'optPartNo';
+  optDefault.value = ''; optDefault.dataset.i18n = 'optPartNo';
   optDefault.textContent = I18N[currentLang].optPartNo;
   partSel.appendChild(optDefault);
-  partSel.disabled = false;
+  if(!modelo || !bomPorModelo[modelo]) return;
   [...bomPorModelo[modelo]].sort().forEach(pn=>{
     const opt = document.createElement('option');
     opt.value = pn; opt.textContent = pn;
