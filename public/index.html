@@ -207,17 +207,19 @@
   .btn-secondary:hover{border-color:var(--text-muted) !important;}
 
   #printSheet{
-    position:absolute;left:-99999px;top:0;width:800px;background:#fff;color:#000;padding:24px;
+    position:fixed;left:0;top:-10000px;width:800px;background:#fff;color:#000;padding:24px;
   }
   .p-card{border:1px solid #ccc;border-radius:8px;padding:14px 16px;margin-bottom:12px;}
   .p-head{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#555;font-weight:700;margin-bottom:6px;}
   .p-text{font-size:13px;white-space:pre-wrap;margin-bottom:10px;}
-  .p-photos{display:flex;flex-wrap:wrap;gap:10px;}
-  .p-photos img{width:220px;height:220px;object-fit:cover;border-radius:6px;border:1px solid #ddd;}
-  .p-meta{display:flex;flex-wrap:wrap;gap:16px 24px;font-size:12px;color:#333;margin-bottom:16px;}
+  .p-photos{font-size:0;}
+  .p-photos img{display:inline-block;width:220px;height:220px;object-fit:cover;border-radius:6px;border:1px solid #ddd;margin:0 10px 10px 0;}
+  .p-meta{font-size:12px;color:#333;margin-bottom:16px;}
+  .p-meta span{display:inline-block;margin:0 24px 8px 0;}
   .p-title{font-size:18px;font-weight:700;margin-bottom:2px;}
-  .p-doc-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #ccc;}
-  .p-doc-header img{height:44px;width:auto;}
+  .p-doc-header{margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #ccc;}
+  .p-doc-header img{height:44px;width:auto;vertical-align:middle;margin-right:12px;}
+  .p-doc-header .p-title{display:inline-block;vertical-align:middle;}
 
   @media print{
     header,.page-sub,.actions,.add-photo,.tabs,.report-num,.save-status{display:none !important;}
@@ -782,7 +784,7 @@ function imprimirRecord(numero, data){
   const espera = imgs.map(img=> img.complete ? Promise.resolve() : new Promise(res=>{ img.onload = res; img.onerror = res; }));
 
   Promise.all(espera).then(()=>{
-    html2canvas(sheet, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(canvas=>{
+    html2canvas(sheet, {scale:2, useCORS:true, backgroundColor:'#ffffff', width: sheet.scrollWidth, windowWidth: sheet.scrollWidth}).then(canvas=>{
       const pxToMm = 25.4/96;
       const wMM = sheet.offsetWidth * pxToMm;
       const hMM = sheet.scrollHeight * pxToMm;
