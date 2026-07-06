@@ -651,12 +651,19 @@ function fechaCorta(d){
 function asignarNumeroReporte(){
   const db = firebase.firestore();
   const yymmdd = fechaCorta(new Date());
-  const counterRef = db.collection('reportes_problema_p4_counters').doc(yymmdd);
+  const counterRef = db.collection('reportes_problema_p4_counters').doc('global');
   return db.runTransaction(tx=>{
     return tx.get(counterRef).then(doc=>{
-      const seq = (doc.exists ? doc.data().seq : 0) + 1;
-      tx.set(counterRef, {seq: seq});
-      return REPORT_PREFIX + '-' + yymmdd + '-' + pad(seq, 4);
+      if(doc.exists){
+        const seq = doc.data().seq + 1;
+        tx.set(counterRef, {seq: seq});
+        return REPORT_PREFIX + '-' + yymmdd + '-' + pad(seq, 4);
+      }
+      return db.collection('reportes_problema_p4').get().then(snap=>{
+        const seq = snap.size + 1;
+        tx.set(counterRef, {seq: seq});
+        return REPORT_PREFIX + '-' + yymmdd + '-' + pad(seq, 4);
+      });
     });
   });
 }
