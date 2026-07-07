@@ -7,7 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-firestore-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg:#0a0e16;
@@ -415,7 +414,6 @@
     <div class="listado-toolbar">
       <input type="text" id="listadoSearch" data-i18n-placeholder="listadoSearchPh" placeholder="Buscar por número, modelo, línea o responsable..." oninput="renderListado()">
       <button class="action btn-secondary" onclick="cargarListado()" data-i18n="btnRefrescar">🔄 Refrescar</button>
-      <button class="action btn-secondary" onclick="descargarExcel()" data-i18n="btnExcel">📊 Descargar Excel</button>
     </div>
     <div class="table-wrap">
       <table class="dt2">
@@ -427,7 +425,6 @@
             <th data-i18n="colModelo">Modelo</th>
             <th data-i18n="colResp">Responsable</th>
             <th data-i18n="colVer">Ver</th>
-            <th data-i18n="colEliminar">Eliminar</th>
           </tr>
         </thead>
         <tbody id="listadoBody"></tbody>
@@ -472,9 +469,6 @@ const I18N = {
     listadoSearchPh:'Buscar por número, modelo, línea o responsable...',
     btnRefrescar:'🔄 Refrescar',
     colNum:'Número', colFecha:'Fecha', colLinea:'Línea', colModelo:'Modelo', colResp:'Responsable', colVer:'Ver',
-    colEliminar:'Eliminar', btnExcel:'📊 Descargar Excel', btnEliminar:'🗑️',
-    confirmEliminar:'¿Eliminar el reporte {n}? Esta acción no se puede deshacer.',
-    eliminadoMsg:'Reporte eliminado.',
     dtEmpty:'No hay reportes guardados todavía.', dtLoading:'Cargando reportes...',
     reportNumPrefix:'Reporte N°',
     savingMsg:'Guardando y generando número de reporte...',
@@ -513,9 +507,6 @@ const I18N = {
     listadoSearchPh:'Search by number, model, line or operator...',
     btnRefrescar:'🔄 Refresh',
     colNum:'Number', colFecha:'Date', colLinea:'Line', colModelo:'Model', colResp:'Operator', colVer:'View',
-    colEliminar:'Delete', btnExcel:'📊 Download Excel', btnEliminar:'🗑️',
-    confirmEliminar:'Delete report {n}? This action cannot be undone.',
-    eliminadoMsg:'Report deleted.',
     dtEmpty:'No reports saved yet.', dtLoading:'Loading reports...',
     reportNumPrefix:'Report No.',
     savingMsg:'Saving and generating report number...',
@@ -554,9 +545,6 @@ const I18N = {
     listadoSearchPh:'번호, 모델, 라인 또는 작업자로 검색...',
     btnRefrescar:'🔄 새로고침',
     colNum:'번호', colFecha:'날짜', colLinea:'라인', colModelo:'모델', colResp:'작업자', colVer:'보기',
-    colEliminar:'삭제', btnExcel:'📊 엑셀 다운로드', btnEliminar:'🗑️',
-    confirmEliminar:'{n} 보고서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
-    eliminadoMsg:'보고서가 삭제되었습니다.',
     dtEmpty:'저장된 보고서가 없습니다.', dtLoading:'보고서를 불러오는 중...',
     reportNumPrefix:'보고서 번호',
     savingMsg:'저장하고 보고서 번호를 생성하는 중...',
@@ -766,7 +754,6 @@ function guardarEnFirestore(numero, data, statusEl, dict){
       actualizadoEn: new Date().toISOString()
     }, {merge:true}).then(()=>{
       statusEl.style.display='block'; statusEl.className='save-status ok'; statusEl.textContent = dict.savedMsg;
-      cargarListado();
     }).catch(()=>{
       statusEl.style.display='block'; statusEl.className='save-status err'; statusEl.textContent = dict.saveErrMsg;
     });
@@ -929,40 +916,8 @@ function renderListado(){
   }
   body.innerHTML = filtered.map((r,idx)=>
     '<tr><td class="dt2-num">'+r.numero+'</td><td>'+(r.fecha||'-')+'</td><td>'+(r.linea||'-')+'</td><td>'+(r.modelo||'-')+'</td><td>'+(r.responsable||'-')+'</td>'+
-    '<td><button class="btn-ver" onclick="verReporte('+listadoData.indexOf(r)+')">'+dict.btnVer+'</button></td>'+
-    '<td><button class="btn-ver" onclick="eliminarReporte(\''+r.numero+'\')" title="'+dict.colEliminar+'">'+dict.btnEliminar+'</button></td></tr>'
+    '<td><button class="btn-ver" onclick="verReporte('+listadoData.indexOf(r)+')">'+dict.btnVer+'</button></td></tr>'
   ).join('');
-}
-
-function eliminarReporte(numero){
-  const dict = I18N[currentLang];
-  if(!confirm(dict.confirmEliminar.replace('{n}', numero))) return;
-  const db = firebase.firestore();
-  db.collection('reportes_problema_p4').doc(numero).delete().then(()=>{
-    cargarListado();
-  }).catch(()=>{
-    alert(dict.saveErrMsg);
-  });
-}
-
-function descargarExcel(){
-  const dict = I18N[currentLang];
-  const filas = listadoData.map(r=>({
-    [dict.colNum]: r.numero,
-    [dict.colFecha]: r.fecha||'-',
-    [dict.colLinea]: r.linea||'-',
-    [dict.colModelo]: r.modelo||'-',
-    [dict.colResp]: r.responsable||'-',
-    'Part No.': r.partNo||'-',
-    [dict.t1 || 'Problema']: (r.secciones && r.secciones.problema && r.secciones.problema.texto) || '',
-    [dict.t2 || 'Causa']: (r.secciones && r.secciones.causa && r.secciones.causa.texto) || '',
-    [dict.t3 || 'Primera acción']: (r.secciones && r.secciones.accion && r.secciones.accion.texto) || '',
-    [dict.t4 || 'Contramedida final']: (r.secciones && r.secciones.contramedida && r.secciones.contramedida.texto) || ''
-  }));
-  const ws = XLSX.utils.json_to_sheet(filas);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Reportes');
-  XLSX.writeFile(wb, 'Reportes_de_problema_' + fechaCorta(new Date()) + '.xlsx');
 }
 
 function verReporte(idx){
