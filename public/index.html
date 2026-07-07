@@ -474,6 +474,7 @@ const I18N = {
     savingMsg:'Guardando y generando número de reporte...',
     savedMsg:'Reporte guardado correctamente.',
     saveErrMsg:'No se pudo guardar en el servidor. El PDF se generó de todas formas, pero no quedó registrado en el listado.',
+    sizeErrMsg:'El reporte tiene demasiadas fotos y no se pudo guardar en el listado (límite de tamaño). El PDF se descargó de todas formas. Quita alguna foto o usa fotos más pequeñas.',
     btnVer:'Ver', btnImprimir:'Descargar PDF', btnCerrar:'Cerrar'
   },
   en:{
@@ -511,6 +512,7 @@ const I18N = {
     savingMsg:'Saving and generating report number...',
     savedMsg:'Report saved successfully.',
     saveErrMsg:'Could not save to the server. The PDF was generated anyway, but was not recorded in the list.',
+    sizeErrMsg:'The report has too many photos and could not be saved to the list (size limit). The PDF was downloaded anyway. Remove a photo or use smaller photos.',
     btnVer:'View', btnImprimir:'Download PDF', btnCerrar:'Close'
   },
   ko:{
@@ -548,6 +550,7 @@ const I18N = {
     savingMsg:'저장하고 보고서 번호를 생성하는 중...',
     savedMsg:'보고서가 저장되었습니다.',
     saveErrMsg:'서버에 저장하지 못했습니다. PDF는 생성되었지만 목록에는 기록되지 않았습니다.',
+    sizeErrMsg:'사진이 너무 많아 목록에 저장하지 못했습니다 (크기 제한). PDF는 다운로드되었습니다. 사진을 줄이거나 더 작은 사진을 사용하세요.',
     btnVer:'보기', btnImprimir:'PDF 다운로드', btnCerrar:'닫기'
   }
 };
@@ -592,14 +595,14 @@ function compressImage(file){
     reader.onload = ev=>{
       const img = new Image();
       img.onload = ()=>{
-        const maxW = 900;
+        const maxW = 640;
         const scale = Math.min(1, maxW / img.width);
         const canvas = document.createElement('canvas');
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.65));
+        resolve(canvas.toDataURL('image/jpeg', 0.45));
       };
       img.src = ev.target.result;
     };
@@ -694,6 +697,8 @@ function guardarYGenerarPDF(){
   const statusEl = document.getElementById('saveStatus');
   const dict = I18N[currentLang];
   const data = recolectarDatosFormulario();
+  const tamanoBytes = new Blob([JSON.stringify(data)]).size;
+  const demasiadoGrande = tamanoBytes > 900000;
 
   const proceedSaved = (numero)=>{
     currentReportNumber = numero;
@@ -706,6 +711,12 @@ function guardarYGenerarPDF(){
     document.getElementById('reportNumText').textContent = dict.reportNumPrefix + ': ' + numeroTemp;
     imprimirRecord(numeroTemp, data);
   };
+
+  if (demasiadoGrande){
+    statusEl.style.display='block'; statusEl.className='save-status err'; statusEl.textContent = dict.sizeErrMsg;
+    proceedUnsaved(REPORT_PREFIX + '-' + fechaCorta(new Date()) + '-????');
+    return;
+  }
 
   if (currentReportNumber){
     guardarEnFirestore(currentReportNumber, data, statusEl, dict);
