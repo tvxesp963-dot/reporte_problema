@@ -952,12 +952,7 @@ function descargarExcel(){
     [dict.colFecha]: r.fecha||'-',
     [dict.colLinea]: r.linea||'-',
     [dict.colModelo]: r.modelo||'-',
-    [dict.colResp]: r.responsable||'-',
-    'Part No.': r.partNo||'-',
-    [dict.t1 || 'Problema']: (r.secciones && r.secciones.problema && r.secciones.problema.texto) || '',
-    [dict.t2 || 'Causa']: (r.secciones && r.secciones.causa && r.secciones.causa.texto) || '',
-    [dict.t3 || 'Primera acción']: (r.secciones && r.secciones.accion && r.secciones.accion.texto) || '',
-    [dict.t4 || 'Contramedida final']: (r.secciones && r.secciones.contramedida && r.secciones.contramedida.texto) || ''
+    [dict.colResp]: r.responsable||'-'
   }));
   const ws = XLSX.utils.json_to_sheet(filas);
   const wb = XLSX.utils.book_new();
